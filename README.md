@@ -14,7 +14,7 @@ docker-compose up -d
 The crawler starts its work automatically.
 
 ## Use
-To find something in your index, you can use kibana. You have to know the ip:
+To find something in your index, you can use kibana. You have to know the ip of the kibana container:
 ```
 docker inspect torcrawler_kibana_1 | jq '.[] | .NetworkSettings.Networks.torcrawler_default.IPAddress'
 ```
