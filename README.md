@@ -6,12 +6,23 @@ webcrawler using a tor-proxy, elasticsearch and scrapy
 - docker-compose
 - internet connection :\
 
-## How to start
+## How to create and run
 You can set the entrypoint for the crawler in the docker-compose.yml under scrapy / urls. Many urls are comma separated.
 ```
 docker-compose up -d
 ```
 The crawler starts its work automatically.
+
+## How to stop / start
+```
+docker-compose stop
+docker-compose start
+```
+
+## How to delete
+```
+docker-compose down
+```
 
 ## Use
 To find something in your index, you can use kibana. You have to know the ip of the kibana container:
