@@ -25,13 +25,10 @@ docker-compose down
 ```
 
 ## Use
-To find something in your index, you can use kibana. You have to know the ip of the kibana container:
-```
-docker inspect torcrawler_kibana_1 | jq '.[] | .NetworkSettings.Networks.torcrawler_default.IPAddress'
-```
+To find something in your index, you can use kibana.
 Open the address in your browser:
 ```
-http://KIBANA_ADDRESS:5601
+http://localhost:5601
 ```
 As index pattern set __"crawler"__. Timefield name is __"timestamp"__.
 

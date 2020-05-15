@@ -9,39 +9,34 @@ services:
 
   polipo:
     image: 'clue/polipo'
-    links:
-      - tor-client:tor
-    command: proxyAddress=0.0.0.0 proxyPort=8181 socksParentProxy=tor:9150
+    command: proxyAddress=0.0.0.0 proxyPort=8181 socksParentProxy=tor-client:9150
     deploy:
       restart_policy:
         condition: on-failure
 
   elasticsearch:
-    image: 'docker.elastic.co/elasticsearch/elasticsearch:5.3.0'
+    image: 'docker.elastic.co/elasticsearch/elasticsearch-oss:7.7.0'
     environment:
-      - xpack.security.enabled=false
       - http.cors.enabled=true
       - http.cors.allow-origin=*
+      - discovery.type=single-node
     deploy:
       restart_policy:
         condition: on-failure
   kibana:
-    image: 'docker.elastic.co/kibana/kibana:5.3.0'
-    links:
-      - elasticsearch
+    image: 'docker.elastic.co/kibana/kibana-oss:7.7.0'
+    ports:
+      - "5601:5601"
 
   scrapy:
     build:
       context: ./scrapy
     environment:
-      - elasticsearch=http://db:9200
+      - elasticsearch=http://elasticsearch:9200
       - http_proxy=http://polipo:8181
       - https_proxy=http://polipo:8181
-      - no_proxy=db
+      - no_proxy=elasticsearch
       - urls=https://thehiddenwiki.org/
-    links:
-      - elasticsearch:db
-      - polipo
     deploy:
       restart_policy:
         condition: on-failure

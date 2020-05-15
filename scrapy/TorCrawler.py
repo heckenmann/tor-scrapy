@@ -14,7 +14,7 @@ class TorCrawler(CrawlSpider):
     start_urls = os.environ["urls"].split(",")
     allowed_domains = ["onion"]
     elasticsearch = os.environ["elasticsearch"]
-    postSite = elasticsearch + "/crawler/page/"
+    postSite = elasticsearch + "/crawler/_doc/"
 
     rules = (
         Rule(
@@ -26,17 +26,18 @@ class TorCrawler(CrawlSpider):
         ),
     )
 
-    def parse_item(self, response):
+    def parse_and_index_item(self, response):
         current_page = {}
         current_page["title"] = response.css("head title ::text").extract_first()
         current_page["url"] = response.url
         current_page["timestamp"] = datetime.datetime.now().isoformat()
-        print(current_page["url"])
         current_page["url_hash"] = hashlib.sha256(current_page["url"].encode('utf-8')).hexdigest()
+        get_response = requests.get(self.postSite + current_page["url_hash"])
         current_page["body"] = response.body.decode('utf-8')
         current_page["links"] = response.xpath("//a/@href").extract()
         current_page["http_status"] = response.status
         # Save to elasticsearch
-        requests.post(self.postSite + current_page["url_hash"], data=json.dumps(current_page))
-
+        headers = {'Content-Type': 'application/json'}
+        jsonBody = json.dumps(current_page)
+        result = requests.post(self.postSite + current_page["url_hash"], data=jsonBody, headers=headers)
         return current_page
