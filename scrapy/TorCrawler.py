@@ -34,6 +34,8 @@ class TorCrawler(CrawlSpider):
         current_page["url_hash"] = hashlib.sha256(current_page["url"].encode('utf-8')).hexdigest()
         get_response = requests.get(self.postSite + current_page["url_hash"])
         current_page["body"] = response.body.decode('utf-8')
+        current_page["domain"] = urlparse(response.url).netloc
+        current_page["path"] = urlparse(response.url).path
         current_page["links"] = response.xpath("//a/@href").extract()
         current_page["http_status"] = response.status
         # Save to elasticsearch
