@@ -13,7 +13,7 @@ class TorCrawler(CrawlSpider):
     depth_limit=0
     start_urls = os.environ["urls"].split(",")
     allowed_domains = ["onion"]
-    elasticsearch = os.environ["elasticsearch"]
+    elasticsearch = os.environ["opensearch"]
     postSite = elasticsearch + "/crawler/_doc/"
 
     rules = (
@@ -22,7 +22,7 @@ class TorCrawler(CrawlSpider):
                 allow=(),
             ),
             follow=True,
-            callback="parse_item",
+            callback="parse_and_index_item",
         ),
     )
 
