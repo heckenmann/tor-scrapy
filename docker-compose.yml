@@ -1,41 +1,62 @@
 ---
 version: '3'
+
+volumes:
+  opensearch-data:
+
 services:
   tor-client:
-    image: 'nagev/tor'
+    image: 'dperson/torproxy'
     deploy:
       restart_policy:
         condition: on-failure
 
   polipo:
     image: 'clue/polipo'
-    command: proxyAddress=0.0.0.0 proxyPort=8181 socksParentProxy=tor-client:9150
+    command: proxyAddress=0.0.0.0 proxyPort=8181 socksParentProxy=tor-client:9050
     deploy:
       restart_policy:
         condition: on-failure
 
-  elasticsearch:
-    image: 'docker.elastic.co/elasticsearch/elasticsearch-oss:7.7.0'
+  opensearch:
+    image: 'opensearchproject/opensearch:2.4.1'
     environment:
       - http.cors.enabled=true
       - http.cors.allow-origin=*
       - discovery.type=single-node
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+      - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
     deploy:
       restart_policy:
         condition: on-failure
-  kibana:
-    image: 'docker.elastic.co/kibana/kibana-oss:7.7.0'
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536 # maximum number of open files for the OpenSearch user, set to at least 65536 on modern systems
+        hard: 65536
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+
+  dashboards:
+    image: 'opensearchproject/opensearch-dashboards:2.4.1'
     ports:
       - "5601:5601"
+    environment:
+      - OPENSEARCH_HOSTS=http://opensearch:9200
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
 
   scrapy:
     build:
       context: ./scrapy
     environment:
-      - elasticsearch=http://elasticsearch:9200
+      - opensearch=http://opensearch:9200
       - http_proxy=http://polipo:8181
       - https_proxy=http://polipo:8181
-      - no_proxy=elasticsearch
+      - no_proxy=opensearch
       - urls=https://thehiddenwiki.org/
     deploy:
       restart_policy:
